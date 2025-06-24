@@ -1,0 +1,248 @@
+.table-list-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.table-list-container:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-hover);
+}
+
+.table-list-container h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.table-list-container h2::before {
+  font-size: 1.5rem;
+}
+
+.tables-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.table-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.table-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent-primary);
+}
+
+.table-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.table-name::before {
+  content: "🗂️";
+  font-size: 1rem;
+}
+
+.table-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.table-buttons button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.view-btn {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.view-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.download-btn {
+  background: var(--success);
+  color: white;
+}
+
+.download-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.delete-btn {
+  background: var(--danger);
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.data-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--border-color);
+}
+
+.data-section h3 {
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.data-section h3::before {
+  content: "📋";
+  font-size: 1.2rem;
+}
+
+.table-wrapper {
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  max-height: 600px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+}
+
+.data-table {
+  width: 100%;
+  margin: 0;
+  box-shadow: none;
+}
+
+.data-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-tertiary);
+}
+
+.data-table th {
+  background: var(--bg-tertiary);
+  border-bottom: 2px solid var(--border-color);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.data-table td {
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.data-table tr:nth-child(even) {
+  background: var(--bg-secondary);
+}
+
+.data-table tr:hover {
+  background: var(--bg-tertiary);
+}
+
+/* Empty state */
+.data-section p {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 3rem;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius);
+  border: 2px dashed var(--border-color);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .tables-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .table-card {
+    padding: 1rem;
+  }
+  
+  .table-buttons {
+    flex-direction: column;
+  }
+  
+  .data-table {
+    font-size: 0.75rem;
+  }
+  
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem;
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .table-list-container {
+    padding: 1rem;
+  }
+  
+  .table-wrapper {
+    max-height: 400px;
+  }
+  
+  .data-table th,
+  .data-table td {
+    padding: 0.375rem;
+    font-size: 0.7rem;
+    max-width: 100px;
+  }
+}
+
+/* Loading animation for table cards */
+.table-card.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.table-card.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-color);
+  border-top: 2px solid var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  transform: translate(-50%, -50%);
+}
