@@ -1,6 +1,6 @@
 # Excel Database Manager
 
-A modern web application for uploading Excel files to MySQL database with a beautiful, responsive interface.
+A modern web application for uploading Excel files to MySQL database with a very responsive interface.
 
 ## Features
 
