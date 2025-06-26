@@ -69,10 +69,10 @@ const pool = mysql.createPool(dbConfig)
 async function testConnection() {
   try {
     const connection = await pool.getConnection()
-    console.log("✅ Connected to MySQL database")
+    console.log("Connected to MySQL database")
     connection.release()
   } catch (error) {
-    console.error("❌ Database connection failed:", error.message)
+    console.error("Database connection failed:", error.message)
     process.exit(1)
   }
 }
@@ -162,7 +162,7 @@ app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() })
 })
 
-// Upload route
+// Upload route - FIXED VERSION
 app.post("/upload", uploadLimiter, uploadValidation, async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
@@ -176,10 +176,31 @@ app.post("/upload", uploadLimiter, uploadValidation, async (req, res) => {
   const { tableName, data } = req.body
 
   try {
+    console.log(`Processing upload for table: ${tableName}`)
+    console.log(`Data rows received: ${data.length}`)
+
+    // Filter out completely empty rows
+    const filteredData = data.filter(row => {
+      const values = Object.values(row)
+      return values.some(value => value !== null && value !== undefined && value !== "" && value !== " ")
+    })
+
+    console.log(`Filtered data rows: ${filteredData.length}`)
+
+    if (filteredData.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid data rows found after filtering empty rows",
+      })
+    }
+
     // Sanitize column names
-    const firstRow = data[0]
+    const firstRow = filteredData[0]
     const columns = Object.keys(firstRow)
     const sanitizedColumns = columns.map(sanitizeColumnName)
+
+    console.log(`Original columns: ${columns.join(', ')}`)
+    console.log(`Sanitized columns: ${sanitizedColumns.join(', ')}`)
 
     // Check for duplicate column names after sanitization
     const uniqueColumns = [...new Set(sanitizedColumns)]
@@ -199,10 +220,12 @@ app.post("/upload", uploadLimiter, uploadValidation, async (req, res) => {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )`
 
+    console.log(`Creating table: ${tableName}`)
     await pool.execute(createTableQuery)
+    console.log(`Table created successfully`)
 
     // Prepare data with sanitized column names
-    const sanitizedData = data.map((row) => {
+    const sanitizedData = filteredData.map((row) => {
       const sanitizedRow = {}
       columns.forEach((originalCol, index) => {
         sanitizedRow[sanitizedColumns[index]] = row[originalCol] || null
@@ -210,22 +233,43 @@ app.post("/upload", uploadLimiter, uploadValidation, async (req, res) => {
       return sanitizedRow
     })
 
-    // Insert data in batches
-    const batchSize = 1000
-    const insertQuery = `INSERT INTO \`${tableName}\` (${sanitizedColumns.map((c) => `\`${c}\``).join(",")}) VALUES ?`
-
-    for (let i = 0; i < sanitizedData.length; i += batchSize) {
-      const batch = sanitizedData.slice(i, i + batchSize)
-      const values = batch.map((row) => sanitizedColumns.map((col) => row[col]))
-      await pool.execute(insertQuery, [values])
+    // Insert data using individual inserts (more reliable than batch)
+    console.log(`Starting data insertion...`)
+    
+    const placeholders = sanitizedColumns.map(() => '?').join(',')
+    const insertQuery = `INSERT INTO \`${tableName}\` (${sanitizedColumns.map((c) => `\`${c}\``).join(",")}) VALUES (${placeholders})`
+    
+    let insertedCount = 0
+    
+    for (let i = 0; i < sanitizedData.length; i++) {
+      const row = sanitizedData[i]
+      const values = sanitizedColumns.map((col) => row[col])
+      
+      try {
+        await pool.execute(insertQuery, values)
+        insertedCount++
+        
+        // Progress logging every 100 rows
+        if (insertedCount % 100 === 0) {
+          console.log(`Inserted ${insertedCount}/${sanitizedData.length} rows`)
+        }
+      } catch (error) {
+        console.error(`Error inserting row ${i + 1}:`, error.message)
+        console.error(`Row data:`, row)
+        // Continue with other rows instead of failing completely
+      }
     }
+
+    console.log(`Successfully inserted ${insertedCount}/${sanitizedData.length} rows`)
 
     res.json({
       success: true,
-      message: `Successfully uploaded ${data.length} rows to table '${tableName}'`,
-      rowsInserted: data.length,
+      message: `Successfully uploaded ${insertedCount} rows to table '${tableName}'`,
+      rowsInserted: insertedCount,
+      totalRows: sanitizedData.length,
     })
   } catch (error) {
+    console.error(`Upload failed for table ${tableName}:`, error)
     handleError(res, error, "Failed to upload data")
   }
 })
@@ -393,12 +437,11 @@ process.on("SIGINT", async () => {
 })
 
 process.on("SIGTERM", async () => {
-  console.log("Shutting down gracefully...")
   await pool.end()
   process.exit(0)
 })
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`)
-  console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`)
+  console.log(`Server running at http://localhost:${PORT}`)
+  console.log(`Environment: ${process.env.NODE_ENV || "development"}`)
 })
