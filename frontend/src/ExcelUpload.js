@@ -33,7 +33,7 @@ const ExcelUpload = ({ onUpload, onError }) => {
         return new Date(value).toLocaleDateString()
       }
       if (value > 25569 && value < 2958465) {
-        const date = new Date((value - 25569) * 86400 * 1000)
+        const date = new Date((value - 25569) * 86400 * 1000) 
         if (!isNaN(date.getTime())) {
           return date.toLocaleDateString()
         }
